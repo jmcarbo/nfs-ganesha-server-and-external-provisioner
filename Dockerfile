@@ -12,6 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+FROM golang:1.16 AS golang
+RUN mkdir /nfs
+COPY . /nfs
+RUN cd /nfs/cmd/nfs-provisioner && go build -o nfs-provisioner .
+
 # Modified from https://github.com/rootfs/nfs-ganesha-docker by Huamin Chen
 FROM fedora:30 AS build
 
@@ -49,7 +54,7 @@ COPY --from=build /usr/local /usr/local/
 COPY --from=build /ganesha-extra /
 
 ARG binary=bin/nfs-provisioner
-COPY ${binary} /nfs-provisioner
+COPY --from=golang /nfs/cmd/nfs-provisioner/nfs-provisioner /nfs-provisioner
 
 # run ldconfig after libs have been copied
 RUN ldconfig
